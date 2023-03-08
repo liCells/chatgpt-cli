@@ -7,5 +7,5 @@
 > ?? is an alias I defined.
 
 ```bash
-alias ??="chatgpt-cli zsh openAI_APIKey http://127.0.0.1:7890"
+alias ??="chatgpt-cli -c zsh -t openAI_APIKey -p http://127.0.0.1:7890 -C"
 ```
