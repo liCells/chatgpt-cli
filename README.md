@@ -1,5 +1,7 @@
 # chatgpt-cli
 
+Get the desired command through ChatGPT.
+
 ## usage
 
 ![gif](https://raw.githubusercontent.com/liCells/chatgpt-cli/main/chatgpt-cli.gif)
