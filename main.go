@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"golang.design/x/clipboard"
@@ -11,11 +10,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	inf "github.com/fzdwx/infinite"
+	"github.com/fzdwx/infinite/components/input/text"
+	"github.com/fzdwx/infinite/theme"
 )
 
 const (
 	GREEN  = "\033[32m"
-	BLUE   = "\033[;34m"
 	PURPLE = "\033[;35m"
 )
 
@@ -36,10 +38,12 @@ func main() {
 	token = os.Args[2]
 	commandInterpreter = os.Args[1]
 
-	fmt.Print(PURPLE, "Enter your question: ")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	question := scanner.Text()
+	i := inf.NewText(
+		text.WithPrompt("Enter your question?"),
+		text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+	)
+
+	question, _ := i.Display()
 
 	if len(question) == 0 {
 		fmt.Print("No question, exit.\n")
@@ -68,9 +72,13 @@ func main() {
 func ask(chatCompletionResponse ChatCompletionResponse, chatCompletionMessage ChatCompletionMessage, command string) {
 	fmt.Println(GREEN, command)
 
-	fmt.Print(BLUE, "Do you want to execute this command? (Y/n/s(suggestion)/e(explain)/c(Copy to Clipboard)) ")
-	var whether string
-	fmt.Scan(&whether)
+	i := inf.NewText(
+		text.WithPrompt("Do you want to execute this command?"),
+		text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+		text.WithDefaultValue("Y/n/s(suggestion)/e(explain)/c(Copy to Clipboard)"),
+	)
+	whether, _ := i.Display()
+
 	if strings.EqualFold(whether, "y") {
 		executeCommand(command)
 	} else if strings.EqualFold(whether, "c") {
@@ -100,10 +108,12 @@ func ask(chatCompletionResponse ChatCompletionResponse, chatCompletionMessage Ch
 }
 
 func askSuggestion() string {
-	fmt.Print(PURPLE, "Enter your suggestion: ")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	suggestion := scanner.Text()
+	i := inf.NewText(
+		text.WithPrompt("Enter your suggestion:"),
+		text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+	)
+
+	suggestion, _ := i.Display()
 
 	if len(suggestion) == 0 {
 		askSuggestion()
