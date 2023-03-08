@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"golang.design/x/clipboard"
 	"io"
@@ -22,21 +23,27 @@ const (
 )
 
 var (
-	commandInterpreter string
-	token              string
-	proxy              string
+	commandInterpreter       string
+	token                    string
+	proxy                    string
+	copyToClipboardByDefault bool
+	h                        bool
 )
 
 func main() {
-	if len(os.Args) == 4 {
-		proxy = os.Args[3]
-	} else if len(os.Args) != 3 {
-		fmt.Println("Usage:   <commandInterpreter> <token> <proxy>")
-		fmt.Println("Example: zsh openAI_APIKey http://127.0.0.1:7890")
+	flag.StringVar(&commandInterpreter, "c", "bash", "command interpreter")
+	flag.StringVar(&token, "t", "", "openAI KEY")
+	flag.StringVar(&proxy, "p", "", "proxy address")
+	flag.BoolVar(&copyToClipboardByDefault, "C", false, "copy to clipboard by default")
+	flag.BoolVar(&h, "h", false, "help")
+
+	flag.Usage = usage
+
+	flag.Parse()
+	if h {
+		flag.Usage()
 		return
 	}
-	token = os.Args[2]
-	commandInterpreter = os.Args[1]
 
 	i := inf.NewText(
 		text.WithPrompt("Enter your question?"),
@@ -69,9 +76,17 @@ func main() {
 	ask(chatCompletionResponse, chatCompletionMessage, chatCompletionResponse.Choices[0].Message.Content)
 }
 
+func usage() {
+	fmt.Print("Example: -c zsh -t openAI_APIKey -p http://127.0.0.1:7890 -C\n\n")
+	flag.PrintDefaults()
+}
+
 func ask(chatCompletionResponse ChatCompletionResponse, chatCompletionMessage ChatCompletionMessage, command string) {
 	fmt.Println(GREEN, command)
 
+	if copyToClipboardByDefault {
+		writeClipboard(command)
+	}
 	i := inf.NewText(
 		text.WithPrompt("Do you want to execute this command?"),
 		text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
@@ -82,11 +97,7 @@ func ask(chatCompletionResponse ChatCompletionResponse, chatCompletionMessage Ch
 	if strings.EqualFold(whether, "y") {
 		executeCommand(command)
 	} else if strings.EqualFold(whether, "c") {
-		err := clipboard.Init()
-		if err != nil {
-			panic(err)
-		}
-		clipboard.Write(clipboard.FmtText, []byte(command))
+		writeClipboard(command)
 	} else if strings.EqualFold(whether, "e") {
 		chatCompletionMessage.Messages = append(chatCompletionMessage.Messages, ChatMessage{
 			Role:    "user",
@@ -105,6 +116,14 @@ func ask(chatCompletionResponse ChatCompletionResponse, chatCompletionMessage Ch
 
 		ask(chatCompletionResponse, chatCompletionMessage, chatCompletionResponse.Choices[0].Message.Content)
 	}
+}
+
+func writeClipboard(command string) {
+	err := clipboard.Init()
+	if err != nil {
+		panic(err)
+	}
+	clipboard.Write(clipboard.FmtText, []byte(command))
 }
 
 func askSuggestion() string {
